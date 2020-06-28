@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        app:enabled="true"
+        app:key="@string/pref_category_key_camera"
+        app:title="@string/pref_category_title_camera">
+
+        <ListPreference
+            app:key="@string/pref_key_camerax_target_analysis_size"
+            app:persistent="true"
+            app:entries="@array/camerax_target_analysis_size_entries_entryvalues"
+            app:entryValues="@array/camerax_target_analysis_size_entries_entryvalues"
+            app:defaultValue="800x800"
+            app:useSimpleSummaryProvider="true"
+            app:title="@string/pref_title_camerax_target_analysis_size" />
+    </PreferenceCategory>
+
+
+    <PreferenceCategory
+        app:title="@string/pref_category_object_detection">
+
+        <SwitchPreference
+            app:defaultValue="false"
+            app:key="@string/pref_key_object_detector_enable_multiple_objects"
+            app:persistent="true"
+            app:title="@string/pref_title_object_detector_enable_multiple_objects"/>
+
+        <SwitchPreference
+            app:defaultValue="true"
+            app:key="@string/pref_key_object_detector_enable_classification"
+            app:persistent="true"
+            app:title="@string/pref_title_object_detector_enable_classification"/>
+
+        <SeekBarPreference
+            app:title="Classification confidence threshold"
+            app:key="@string/pref_key_object_detector_classification_confidence_threshold"
+            app:persistent="true"
+            app:defaultValue="0"
+            android:max="100"
+            app:showSeekBarValue="true"
+            />
+
+    </PreferenceCategory>
+</PreferenceScreen>

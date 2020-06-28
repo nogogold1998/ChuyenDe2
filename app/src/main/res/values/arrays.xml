@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="camerax_target_analysis_size_entries_entryvalues" >
+        <item>2000x2000</item>
+        <item>1600x1600</item>
+        <item>1200x1200</item>
+        <item>1000x1000</item>
+        <item>800x800</item>
+        <item>600x600</item>
+        <item>400x400</item>
+        <item>200x200</item>
+        <item>200x200</item>
+        <item>100x100</item>
+    </string-array>
+</resources>

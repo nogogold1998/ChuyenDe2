@@ -23,6 +23,7 @@ import android.graphics.RectF
 import com.example.bikelicenseplates.view.GraphicOverlay
 import com.google.mlkit.vision.objects.DetectedObject
 import java.util.Locale
+import kotlin.math.max
 
 /** Draw the detected object info in preview.  */
 class ObjectGraphic constructor(
@@ -60,6 +61,7 @@ class ObjectGraphic constructor(
                 textPaints[colorID].measureText("Tracking ID: " + detectedObject.trackingId)
         val lineHeight = TEXT_SIZE + STROKE_WIDTH
         var yLabelOffset = -lineHeight
+        // var yLabelOffset = 0f
 
         // Calculate width and height of label box
         for (label in detectedObject.labels) {
@@ -88,30 +90,31 @@ class ObjectGraphic constructor(
         canvas.drawRect(rect, boxPaints[colorID])
 
         // Draws other object info.
-        val left = if (isImageFlipped()) rect.right else rect.left
+        val left = max(if (isImageFlipped()) rect.right else rect.left, 0f)
+        var top = max(rect.top + yLabelOffset, 0f)
         canvas.drawRect(
                 left - STROKE_WIDTH,
-                rect.top + yLabelOffset,
+                top,
                 left + textWidth + 2 * STROKE_WIDTH,
-                rect.top,
+                top + TEXT_SIZE + lineHeight * detectedObject.labels.size * 2 + STROKE_WIDTH,
                 labelPaints[colorID]
         )
-        yLabelOffset += TEXT_SIZE
+        top += TEXT_SIZE
         canvas.drawText(
                 "Tracking ID: " + detectedObject.trackingId,
                 left,
-                rect.top + yLabelOffset,
+                top,
                 textPaints[colorID]
         )
-        yLabelOffset += lineHeight
+        top += lineHeight
         for (label in detectedObject.labels) {
             canvas.drawText(
-                    label.text + " (index: " + label.index + ")",
+                    label.text /*+ " (index: " + label.index + ")"*/,
                     left,
-                    rect.top + yLabelOffset,
+                    top,
                     textPaints[colorID]
             )
-            yLabelOffset += lineHeight
+            top += lineHeight
             canvas.drawText(
                     String.format(
                             Locale.US,
@@ -120,15 +123,15 @@ class ObjectGraphic constructor(
                             label.index
                     ),
                     left,
-                    rect.top + yLabelOffset,
+                    top,
                     textPaints[colorID]
             )
-            yLabelOffset += lineHeight
+            top += lineHeight
         }
     }
 
     companion object {
-        private const val TEXT_SIZE = 54.0f
+        private const val TEXT_SIZE = 40.0f
         private const val STROKE_WIDTH = 4.0f
         private const val NUM_COLORS = 10
         private val COLORS =

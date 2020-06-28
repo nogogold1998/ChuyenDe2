@@ -1,5 +1,17 @@
 <resources>
-    <string name="app_name">BikeLicensePlates</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="app_name">Bike License Plates</string>
+
+    <string name="text_permissions_fragment">Permissions fragment</string>
+
+
+    <string name="pref_category_key_camera">pref_category_key_camera</string>
+    <string name="pref_category_title_camera">Camera</string>
+    <string name="pref_key_camerax_target_analysis_size">pref_key_camerax_target_analysis_size</string>
+    <string name="pref_title_camerax_target_analysis_size">CameraX target analysis resolution</string>
+    <string name="pref_category_object_detection">Object Detection</string>
+    <string name="pref_key_object_detector_enable_multiple_objects">pref_key_live_preview_object_detector_enable_multible_objects</string>
+    <string name="pref_title_object_detector_enable_multiple_objects">Enable multible objects</string>
+    <string name="pref_key_object_detector_enable_classification">pref_key_live_preview_object_detector_enable_classification</string>
+    <string name="pref_title_object_detector_enable_classification">Enable classification</string>
+    <string name="pref_key_object_detector_classification_confidence_threshold">pref_key_object_detector_classification_confidence_theshold</string>
 </resources>

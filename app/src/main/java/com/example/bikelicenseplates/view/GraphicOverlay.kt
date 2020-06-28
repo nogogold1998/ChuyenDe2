@@ -65,7 +65,7 @@ class GraphicOverlay(context: Context?, attrs: AttributeSet?) : View(context, at
      * this and implement the [Graphic.draw] method to define the graphics element. Add
      * instances to the overlay using [GraphicOverlay.add].
      */
-    abstract class Graphic(private val overlay: GraphicOverlay) {
+    abstract class Graphic(val overlay: GraphicOverlay) {
 
         /**
          * Draw the graphic on the supplied canvas. Drawing should use the following methods to convert
@@ -188,8 +188,7 @@ class GraphicOverlay(context: Context?, attrs: AttributeSet?) : View(context, at
         if (viewAspectRatio > imageAspectRatio) {
             // The image needs to be vertically cropped to be displayed in this view.
             scaleFactor = width.toFloat() / imageWidth
-            postScaleHeightOffset =
-                (width.toFloat() / imageAspectRatio - height) / 2
+            postScaleHeightOffset = (width.toFloat() / imageAspectRatio - height) / 2
         } else {
             // The image needs to be horizontally cropped to be displayed in this view.
             scaleFactor = height.toFloat() / imageHeight

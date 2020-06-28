@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +17,9 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.Navigation
+import androidx.preference.PreferenceManager
+import com.example.bikelicenseplates.R
 import com.example.bikelicenseplates.databinding.FragmentCameraxPreviewBinding
 import com.example.bikelicenseplates.objectdetector.ObjectGraphic
 import com.example.bikelicenseplates.view.GraphicOverlay
@@ -43,7 +47,6 @@ class CameraXPreviewFragment : Fragment() {
     private var previewUseCase: Preview? = null
     private var analysisUseCase: ImageAnalysis? = null
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
@@ -67,8 +70,19 @@ class CameraXPreviewFragment : Fragment() {
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding.buttonSettings.setOnClickListener(
+            Navigation.createNavigateOnClickListener(
+                CameraXPreviewFragmentDirections.actionCameraXPreviewToSettings()
+            )
+        )
+    }
+
     override fun onResume() {
         super.onResume()
+        bindPreviewUseCase()
+        bindAnalysisUseCase()
     }
 
     override fun onPause() {
@@ -96,7 +110,14 @@ class CameraXPreviewFragment : Fragment() {
             cameraProvider!!.unbind(previewUseCase)
         }
 
-        previewUseCase = Preview.Builder().build()
+        previewUseCase = Preview.Builder().apply {
+            val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(requireContext())
+            val prefKey = getString(R.string.pref_key_camerax_target_analysis_size)
+            val size: Size? = Size.parseSize(sharedPreferences.getString(prefKey, null))
+            if (size != null) {
+                setTargetResolution(size)
+            }
+        }.build()
         previewUseCase!!.setSurfaceProvider(binding.previewView.createSurfaceProvider())
         cameraProvider!!.bindToLifecycle(viewLifecycleOwner, cameraSelector!!, previewUseCase)
     }
@@ -109,9 +130,6 @@ class CameraXPreviewFragment : Fragment() {
         if (analysisUseCase != null) {
             cameraProvider!!.unbind(analysisUseCase)
         }
-        // if (imageProcessor != null) {
-        //     imageProcessor!!.stop()
-        // }
 
         analysisUseCase = ImageAnalysis.Builder().build()
 
@@ -125,10 +143,12 @@ class CameraXPreviewFragment : Fragment() {
 
     private class ImageAnalyzer(context: Context, private val graphicsOverlay: GraphicOverlay) :
         ImageAnalysis.Analyzer {
+        private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
         // todo 3: setup the local model
         private val localModel = LocalModel.Builder()
-            .setAssetFilePath("aiy_vision_classifier_birds_V1_2.tflite")
+            // .setAssetFilePath("aiy_vision_classifier_birds_V1_2.tflite")
+            .setAssetFilePath("bird_classifier.tflite")
             .build()
 
         /* todo 4: create an options object using a Building by specifying:
@@ -140,11 +160,29 @@ class CameraXPreviewFragment : Fragment() {
         * build the option object
         */
         private val customObjectDetectorOptions =
-            CustomObjectDetectorOptions.Builder(localModel)
-                .setDetectorMode(CustomObjectDetectorOptions.STREAM_MODE)
-                .enableClassification()
-                // .setClassificationConfidenceThreshold(0.8f)
-                // .setMaxPerObjectLabelCount(1)
+            CustomObjectDetectorOptions.Builder(localModel).apply {
+                setDetectorMode(CustomObjectDetectorOptions.STREAM_MODE)
+                if (sharedPreferences.getBoolean(
+                        context.getString(R.string.pref_key_object_detector_enable_multiple_objects),
+                        false
+                    )
+                ) {
+                    enableMultipleObjects()
+                }
+                if (sharedPreferences.getBoolean(
+                        context.getString(R.string.pref_key_object_detector_enable_classification),
+                        true
+                    )
+                ) {
+                    enableClassification()
+                }
+                val threshold = sharedPreferences.getInt(
+                    context.getString(R.string.pref_key_object_detector_classification_confidence_threshold),
+                    0
+                )
+                setClassificationConfidenceThreshold(threshold.toFloat() / 100)
+                // setMaxPerObjectLabelCount(1)
+            }
                 .build()
 
         // todo 5: create an object detector instance
