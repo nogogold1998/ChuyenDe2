@@ -72,6 +72,8 @@ dependencies {
 
     // todo 2: ODT import
     implementation "com.google.mlkit:object-detection-custom:16.0.0"
+    // Text Recognition
+    implementation 'com.google.android.gms:play-services-mlkit-text-recognition:16.0.0'
 
     testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'

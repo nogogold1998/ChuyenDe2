@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.bikelicenseplates.objectdetector
+package com.example.bikelicenseplates.view.graphic
 
 import android.graphics.Canvas
 import android.graphics.Color
@@ -27,8 +27,8 @@ import kotlin.math.max
 
 /** Draw the detected object info in preview.  */
 class ObjectGraphic constructor(
-        overlay: GraphicOverlay,
-        private val detectedObject: DetectedObject
+    overlay: GraphicOverlay,
+    private val detectedObject: DetectedObject
 ) : GraphicOverlay.Graphic(overlay) {
 
     private val numColors = COLORS.size
@@ -55,10 +55,10 @@ class ObjectGraphic constructor(
     override fun draw(canvas: Canvas) {
         // Decide color based on object tracking ID
         val colorID =
-                if (detectedObject.trackingId == null) 0
-                else Math.abs(detectedObject.trackingId!! % NUM_COLORS)
+            if (detectedObject.trackingId == null) 0
+            else Math.abs(detectedObject.trackingId!! % NUM_COLORS)
         var textWidth =
-                textPaints[colorID].measureText("Tracking ID: " + detectedObject.trackingId)
+            textPaints[colorID].measureText("Tracking ID: " + detectedObject.trackingId)
         val lineHeight = TEXT_SIZE + STROKE_WIDTH
         var yLabelOffset = -lineHeight
         // var yLabelOffset = 0f
@@ -66,17 +66,17 @@ class ObjectGraphic constructor(
         // Calculate width and height of label box
         for (label in detectedObject.labels) {
             textWidth =
-                    Math.max(textWidth, textPaints[colorID].measureText(label.text))
+                Math.max(textWidth, textPaints[colorID].measureText(label.text))
             textWidth = Math.max(
-                    textWidth,
-                    textPaints[colorID].measureText(
-                            String.format(
-                                    Locale.US,
-                                    LABEL_FORMAT,
-                                    label.confidence * 100,
-                                    label.index
-                            )
+                textWidth,
+                textPaints[colorID].measureText(
+                    String.format(
+                        Locale.US,
+                        LABEL_FORMAT,
+                        label.confidence * 100,
+                        label.index
                     )
+                )
             )
             yLabelOffset -= 2 * lineHeight
         }
@@ -93,38 +93,38 @@ class ObjectGraphic constructor(
         val left = max(if (isImageFlipped()) rect.right else rect.left, 0f)
         var top = max(rect.top + yLabelOffset, 0f)
         canvas.drawRect(
-                left - STROKE_WIDTH,
-                top,
-                left + textWidth + 2 * STROKE_WIDTH,
-                top + TEXT_SIZE + lineHeight * detectedObject.labels.size * 2 + STROKE_WIDTH,
-                labelPaints[colorID]
+            left - STROKE_WIDTH,
+            top,
+            left + textWidth + 2 * STROKE_WIDTH,
+            top + TEXT_SIZE + lineHeight * detectedObject.labels.size * 2 + STROKE_WIDTH,
+            labelPaints[colorID]
         )
         top += TEXT_SIZE
         canvas.drawText(
-                "Tracking ID: " + detectedObject.trackingId,
-                left,
-                top,
-                textPaints[colorID]
+            "Tracking ID: " + detectedObject.trackingId,
+            left,
+            top,
+            textPaints[colorID]
         )
         top += lineHeight
         for (label in detectedObject.labels) {
             canvas.drawText(
-                    label.text /*+ " (index: " + label.index + ")"*/,
-                    left,
-                    top,
-                    textPaints[colorID]
+                label.text /*+ " (index: " + label.index + ")"*/,
+                left,
+                top,
+                textPaints[colorID]
             )
             top += lineHeight
             canvas.drawText(
-                    String.format(
-                            Locale.US,
-                            LABEL_FORMAT,
-                            label.confidence * 100,
-                            label.index
-                    ),
-                    left,
-                    top,
-                    textPaints[colorID]
+                String.format(
+                    Locale.US,
+                    LABEL_FORMAT,
+                    label.confidence * 100,
+                    label.index
+                ),
+                left,
+                top,
+                textPaints[colorID]
             )
             top += lineHeight
         }
@@ -135,18 +135,18 @@ class ObjectGraphic constructor(
         private const val STROKE_WIDTH = 4.0f
         private const val NUM_COLORS = 10
         private val COLORS =
-                arrayOf(
-                        intArrayOf(Color.BLACK, Color.WHITE),
-                        intArrayOf(Color.WHITE, Color.MAGENTA),
-                        intArrayOf(Color.BLACK, Color.LTGRAY),
-                        intArrayOf(Color.WHITE, Color.RED),
-                        intArrayOf(Color.WHITE, Color.BLUE),
-                        intArrayOf(Color.WHITE, Color.DKGRAY),
-                        intArrayOf(Color.BLACK, Color.CYAN),
-                        intArrayOf(Color.BLACK, Color.YELLOW),
-                        intArrayOf(Color.WHITE, Color.BLACK),
-                        intArrayOf(Color.BLACK, Color.GREEN)
-                )
+            arrayOf(
+                intArrayOf(Color.BLACK, Color.WHITE),
+                intArrayOf(Color.WHITE, Color.MAGENTA),
+                intArrayOf(Color.BLACK, Color.LTGRAY),
+                intArrayOf(Color.WHITE, Color.RED),
+                intArrayOf(Color.WHITE, Color.BLUE),
+                intArrayOf(Color.WHITE, Color.DKGRAY),
+                intArrayOf(Color.BLACK, Color.CYAN),
+                intArrayOf(Color.BLACK, Color.YELLOW),
+                intArrayOf(Color.WHITE, Color.BLACK),
+                intArrayOf(Color.BLACK, Color.GREEN)
+            )
         private const val LABEL_FORMAT = "%.2f%% confidence (index: %d)"
     }
 }
