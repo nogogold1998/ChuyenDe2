@@ -39,10 +39,6 @@ class CameraXPreviewFragment : Fragment() {
     /** Blocking camera operations are performed using this executor */
     private lateinit var cameraExecutor: ExecutorService
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -72,17 +68,6 @@ class CameraXPreviewFragment : Fragment() {
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
-    override fun onResume() {
-        super.onResume()
-        // bindPreviewUseCase()
-        // bindAnalysisUseCase()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        // todo stop image processor
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
@@ -91,13 +76,7 @@ class CameraXPreviewFragment : Fragment() {
         cameraExecutor.shutdown()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        // todo stop image processor
-    }
-
     private fun bindPreviewUseCase() {
-        // todo kiem tra neu can lay LiveViewPort
         if (cameraProvider == null) {
             Log.d(TAG, "bindPreviewUseCase: cameraProvider == null")
             return

@@ -37,7 +37,7 @@ android {
         viewBinding = true
     }
 
-    // todo 1: prevent tflite from being compressed
+    // prevent tflite from being compressed
     aaptOptions{
         noCompress "tflite"
     }
@@ -70,7 +70,7 @@ dependencies {
 
     implementation "androidx.activity:activity-ktx:1.1.0"
 
-    // todo 2: ODT import
+    // ODT import
     implementation "com.google.mlkit:object-detection-custom:16.0.0"
     // Text Recognition
     implementation 'com.google.android.gms:play-services-mlkit-text-recognition:16.0.0'

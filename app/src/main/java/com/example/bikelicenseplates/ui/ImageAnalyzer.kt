@@ -17,18 +17,19 @@ import com.google.mlkit.vision.objects.DetectedObject
 import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions
 import com.google.mlkit.vision.text.TextRecognition
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 class ImageAnalyzer(context: Context, private val graphicsOverlay: GraphicOverlay) :
     ImageAnalysis.Analyzer {
 
-    // todo 3: setup the local model
+    // 1: setup the local model
     private val localModel = LocalModel.Builder()
         // .setAssetFilePath("aiy_vision_classifier_birds_V1_2.tflite")
         // .setAssetFilePath("bird_classifier.tflite")
         .setAssetFilePath("automl_flowers.tflite")
         .build()
 
-    /* todo 4: create an options object using a Building by specifying:
+    /* 2: create an options object using a Building by specifying:
     * local model
     * stream mode
     * enable classification
@@ -52,17 +53,16 @@ class ImageAnalyzer(context: Context, private val graphicsOverlay: GraphicOverla
             setMaxPerObjectLabelCount(1)
         }.build()
 
-    // todo 5: create an object detector instance
+    // 3: create an object detector instance
     val objectDetector = ObjectDetection.getClient(customObjectDetectorOptions)
 
     val textDetector = TextRecognition.getClient()
 
-    var needUpdateGraphicOverlayImageSourceInfo = true
+    private var needUpdateGraphicOverlayImageSourceInfo = true
 
     @SuppressLint("UnsafeExperimentalUsageError")
     override fun analyze(imageProxy: ImageProxy) {
 
-        // todo place bug here to see imageProxy infos
         if (needUpdateGraphicOverlayImageSourceInfo) {
             val rotationDegrees = imageProxy.imageInfo.rotationDegrees
             // todo inject isImageFlipped
@@ -81,11 +81,11 @@ class ImageAnalyzer(context: Context, private val graphicsOverlay: GraphicOverla
         val mediaImage = imageProxy.image ?: return
         val bitmap = mediaImage.toBitmap()
 
-        // todo 6: create an InputImage object from mediaImage specifying the correct rotation
+        // 4: create an InputImage object from mediaImage specifying the correct rotation
         val inputImage =
             InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
 
-        /* todo 7: process the image adding
+        /* 5: process the image adding
         * failure listener
         * success listener (update the screen)
         * completed listener - close the image proxy
@@ -97,13 +97,13 @@ class ImageAnalyzer(context: Context, private val graphicsOverlay: GraphicOverla
                     "analyze object: ${it.printStackTrace()}"
                 )
             }
-            .addOnSuccessListener { it ->
+            .addOnSuccessListener {
                 graphicsOverlay.clear()
                 for (detectedObject: DetectedObject in it) {
                     graphicsOverlay.add(
                         ObjectGraphic(graphicsOverlay, detectedObject)
                     )
-                    // todo pipeline text detection
+                    // pipeline text detection
                     val rect = detectedObject.boundingBox
                     val croppedBitmap = bitmap.rotateAndCrop(
                         inputImage.rotationDegrees,
@@ -127,6 +127,15 @@ class ImageAnalyzer(context: Context, private val graphicsOverlay: GraphicOverla
                 graphicsOverlay.postInvalidate()
             }
             .addOnCompleteListener { imageProxy.close() }
+    }
+
+    // todo implement async way
+    @SuppressLint("UnsafeExperimentalUsageError")
+    suspend fun analyzeAsync(inputImage: InputImage) = suspendCancellableCoroutine<Unit>{ cancellableContinuation ->
+        objectDetector.process(inputImage)
+            .addOnFailureListener {
+                // cancellableContinuation.resumeWithException()
+            }
     }
 
     companion object {

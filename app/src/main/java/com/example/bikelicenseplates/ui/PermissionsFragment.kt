@@ -1,12 +1,14 @@
 package com.example.bikelicenseplates.ui
 
 import android.Manifest
+import android.content.DialogInterface
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -16,12 +18,26 @@ class PermissionsFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (allPermissionsGranted()) {
-            findNavController().navigate(
-                PermissionsFragmentDirections.actionPermissionsToCameraXPreview()
-            )
-        } else {
-            requestPermissions(PERMISSIONS_REQUIRED, PERMISSION_REQUEST_CODE)
+        when {
+            allPermissionsGranted() -> {
+                findNavController().navigate(
+                    PermissionsFragmentDirections.actionPermissionsToCameraXPreview()
+                )
+            }
+            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("App needs access to camera")
+                    .setMessage("to take live camera feed to detect and analyze license plates.")
+                    .setPositiveButton("Allow access") { _: DialogInterface, _: Int ->
+                        requestPermissions(PERMISSIONS_REQUIRED, PERMISSION_REQUEST_CODE)
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .create()
+                    .show()
+            }
+            else -> {
+                requestPermissions(PERMISSIONS_REQUIRED, PERMISSION_REQUEST_CODE)
+            }
         }
     }
 
