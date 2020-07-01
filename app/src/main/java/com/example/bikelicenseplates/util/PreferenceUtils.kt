@@ -24,10 +24,10 @@ object PreferenceUtils {
         true
     )
 
-    fun getClassificationConfidenceThreshold(context: Context): Int = sharedPreferences.getInt(
+    fun getClassificationConfidenceThreshold(context: Context): Float = sharedPreferences.getInt(
         context.getString(R.string.pref_key_object_detector_classification_confidence_threshold),
         0
-    )
+    ).toFloat() / 100
 
     fun getTargetAnalysisSize(context: Context): Size? {
         val prefKey = context.getString(R.string.pref_key_camerax_target_analysis_size)

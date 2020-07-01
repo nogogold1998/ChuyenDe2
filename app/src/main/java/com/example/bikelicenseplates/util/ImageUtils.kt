@@ -25,12 +25,6 @@ import android.graphics.YuvImage
 import android.media.Image
 import java.io.ByteArrayOutputStream
 
-/**
- * Utility class for manipulating images.
- */
-object ImageUtils {
-}
-
 fun Bitmap.rotateAndCrop(
     imageRotationDegrees: Int,
     xOffset: Int, yOffset: Int,
@@ -47,6 +41,12 @@ fun Bitmap.rotateAndCrop(
 }
 
 fun Image.toBitmap(): Bitmap {
+    if (planes.size == 1) {
+        val buffer = planes[0].buffer // Y
+        val bytes = ByteArray(buffer.remaining())
+        buffer.get(bytes)
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    }
     val yBuffer = planes[0].buffer // Y
     val uBuffer = planes[1].buffer // U
     val vBuffer = planes[2].buffer // V

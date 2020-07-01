@@ -2,59 +2,21 @@ package com.example.bikelicenseplates.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.util.Log
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
-import com.example.bikelicenseplates.util.PreferenceUtils
-import com.example.bikelicenseplates.util.rotateAndCrop
-import com.example.bikelicenseplates.util.toBitmap
+import com.example.bikelicenseplates.util.DetectorUtils
+import com.example.bikelicenseplates.util.analyzeImage
 import com.example.bikelicenseplates.view.GraphicOverlay
 import com.example.bikelicenseplates.view.graphic.ObjectGraphic
-import com.example.bikelicenseplates.view.graphic.TextGraphic
-import com.google.mlkit.common.model.LocalModel
 import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.objects.DetectedObject
-import com.google.mlkit.vision.objects.ObjectDetection
-import com.google.mlkit.vision.objects.custom.CustomObjectDetectorOptions
 import com.google.mlkit.vision.text.TextRecognition
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.runBlocking
 
 class ImageAnalyzer(context: Context, private val graphicsOverlay: GraphicOverlay) :
     ImageAnalysis.Analyzer {
 
-    // 1: setup the local model
-    private val localModel = LocalModel.Builder()
-        // .setAssetFilePath("aiy_vision_classifier_birds_V1_2.tflite")
-        // .setAssetFilePath("bird_classifier.tflite")
-        .setAssetFilePath("automl_flowers.tflite")
-        .build()
-
-    /* 2: create an options object using a Building by specifying:
-    * local model
-    * stream mode
-    * enable classification
-    * establish confidence threshold (at least 50%)
-    * maximum label count per object (setting to 1 because we can only really display one)
-    * build the option object
-    */
-    private val customObjectDetectorOptions =
-        CustomObjectDetectorOptions.Builder(
-            localModel
-        ).apply {
-            setDetectorMode(CustomObjectDetectorOptions.STREAM_MODE)
-            if (PreferenceUtils.getEnableMultipleObjects(context)) {
-                enableMultipleObjects()
-            }
-            if (PreferenceUtils.getEnableClassification(context)) {
-                enableClassification()
-            }
-            val threshold = PreferenceUtils.getClassificationConfidenceThreshold(context)
-            setClassificationConfidenceThreshold(threshold.toFloat() / 100)
-            setMaxPerObjectLabelCount(1)
-        }.build()
-
     // 3: create an object detector instance
-    val objectDetector = ObjectDetection.getClient(customObjectDetectorOptions)
+    val objectDetector = DetectorUtils.getObjectDetector(context)
 
     val textDetector = TextRecognition.getClient()
 
@@ -65,7 +27,7 @@ class ImageAnalyzer(context: Context, private val graphicsOverlay: GraphicOverla
 
         if (needUpdateGraphicOverlayImageSourceInfo) {
             val rotationDegrees = imageProxy.imageInfo.rotationDegrees
-            // todo inject isImageFlipped
+
             if (rotationDegrees == 0 || rotationDegrees == 180) {
                 graphicsOverlay.setImageSourceInfo(
                     imageProxy.width, imageProxy.height, false
@@ -79,7 +41,6 @@ class ImageAnalyzer(context: Context, private val graphicsOverlay: GraphicOverla
         }
 
         val mediaImage = imageProxy.image ?: return
-        val bitmap = mediaImage.toBitmap()
 
         // 4: create an InputImage object from mediaImage specifying the correct rotation
         val inputImage =
@@ -90,52 +51,16 @@ class ImageAnalyzer(context: Context, private val graphicsOverlay: GraphicOverla
         * success listener (update the screen)
         * completed listener - close the image proxy
         */
-        objectDetector.process(inputImage)
-            .addOnFailureListener {
-                Log.d(
-                    TAG,
-                    "analyze object: ${it.printStackTrace()}"
-                )
+        runBlocking {
+            val detectedObjects = objectDetector.analyzeImage(inputImage) {
+                imageProxy.close()
             }
-            .addOnSuccessListener {
-                graphicsOverlay.clear()
-                for (detectedObject: DetectedObject in it) {
-                    graphicsOverlay.add(
-                        ObjectGraphic(graphicsOverlay, detectedObject)
-                    )
-                    // pipeline text detection
-                    val rect = detectedObject.boundingBox
-                    val croppedBitmap = bitmap.rotateAndCrop(
-                        inputImage.rotationDegrees,
-                        rect.top, rect.left,
-                        rect.height(), rect.width()
-                    )
-                    textDetector.process(InputImage.fromBitmap(croppedBitmap, 0))
-                        .addOnFailureListener { exc ->
-                            Log.d(
-                                TAG,
-                                "analyze text: ${detectedObject.labels[0].text}, ${exc.printStackTrace()}"
-                            )
-                        }.addOnSuccessListener { text ->
-                        Log.d(
-                            TAG,
-                            "analyze text: ${detectedObject.labels[0].text}, text: ${text.text}"
-                        )
-                        graphicsOverlay.add(TextGraphic(graphicsOverlay, text, rect))
-                    }
-                }
+            graphicsOverlay.clear()
+            detectedObjects.forEach { detectedObject ->
+                graphicsOverlay.add(ObjectGraphic(graphicsOverlay, detectedObject))
                 graphicsOverlay.postInvalidate()
             }
-            .addOnCompleteListener { imageProxy.close() }
-    }
-
-    // todo implement async way
-    @SuppressLint("UnsafeExperimentalUsageError")
-    suspend fun analyzeAsync(inputImage: InputImage) = suspendCancellableCoroutine<Unit>{ cancellableContinuation ->
-        objectDetector.process(inputImage)
-            .addOnFailureListener {
-                // cancellableContinuation.resumeWithException()
-            }
+        }
     }
 
     companion object {
