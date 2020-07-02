@@ -18,15 +18,23 @@
     </fragment>
     <fragment
         android:id="@+id/cameraXPreviewFragment"
-        android:name="com.example.bikelicenseplates.ui.CameraXPreviewFragment"
+        android:name="com.example.bikelicenseplates.ui.preview.CameraXPreviewFragment"
         android:label="CameraX + ODT + Custom model"
         tools:layout="@layout/fragment_camerax_preview" >
         <action
             android:id="@+id/action_cameraXPreview_to_settings"
             app:destination="@id/settingsFragment" />
+        <action
+            android:id="@+id/action_cameraXPreview_to_analyzedObjectsList"
+            app:destination="@id/analyzedObjectsListFragment2" />
     </fragment>
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.example.bikelicenseplates.ui.SettingsFragment"
         android:label="SettingsFragment" />
+    <fragment
+        android:id="@+id/analyzedObjectsListFragment2"
+        android:name="com.example.bikelicenseplates.ui.analyzed.AnalyzedObjectsListFragment"
+        android:label="Analyzed objects"
+        tools:layout="@layout/fragment_analyzed_objects_list" />
 </navigation>

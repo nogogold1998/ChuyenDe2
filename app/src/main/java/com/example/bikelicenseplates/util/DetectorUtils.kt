@@ -19,20 +19,19 @@ import kotlin.coroutines.resumeWithException
 private const val TAG = "DetectorUtils"
 
 object DetectorUtils {
-    private const val CUSTOM_MODEL_ASSET_PATH = "bird_classifier.tflite"
-    fun getObjectDetector(context: Context): ObjectDetector {
-        // 1: setup the local model
-        val localModel = LocalModel.Builder()
-            // .setAssetFilePath("aiy_vision_classifier_birds_V1_2.tflite")
-            // .setAssetFilePath("automl_flowers.tflite")
-            .setAssetFilePath(CUSTOM_MODEL_ASSET_PATH)
-            .build()
+    private const val CUSTOM_MODEL_ASSET_PATH = "mobilenet_v1_1.0_224_quantized_1_metadata_1.tflite"
 
+    // 1: setup the local model
+    private val localModel = LocalModel.Builder()
+        .setAssetFilePath(CUSTOM_MODEL_ASSET_PATH)
+        .build()
+
+    fun getObjectDetector(context: Context, detectorMode: Int): ObjectDetector {
         // 2: create an option object
         val customObjectDetectorOptions =
             CustomObjectDetectorOptions.Builder(localModel)
                 .apply {
-                    setDetectorMode(CustomObjectDetectorOptions.SINGLE_IMAGE_MODE)
+                    setDetectorMode(detectorMode)
                     if (PreferenceUtils.getEnableMultipleObjects(context)) {
                         enableMultipleObjects()
                     }
@@ -51,29 +50,23 @@ object DetectorUtils {
 
 }
 
-suspend fun ObjectDetector.analyzeImage(inputImage: InputImage,
-    completeCallback: () -> Unit
+suspend fun ObjectDetector.analyzeImage(
+    inputImage: InputImage,
+    completeCallback: (() -> Unit)? = null
 ): List<DetectedObject> = suspendCancellableCoroutine { continuation ->
     this.process(inputImage)
         .addOnFailureListener {
             continuation.resumeWithException(it)
         }.addOnSuccessListener {
             continuation.resume(it)
-        }.addOnCompleteListener { completeCallback.invoke() }
+        }.addOnCompleteListener { completeCallback?.invoke() }
 }
 
 suspend fun TextRecognizer.analyzeCroppedPlate(
-    bitmap: Bitmap,
+    croppedBitmap: Bitmap,
     detectedObject: DetectedObject,
-    rotationDegrees: Int,
     completeCallback: (() -> Unit)? = null
 ) = suspendCancellableCoroutine<Text> { continuation ->
-    val rect = detectedObject.boundingBox
-    val croppedBitmap = bitmap.rotateAndCrop(
-        rotationDegrees,
-        rect.top, rect.left,
-        rect.height(), rect.width()
-    )
     try {
         this.process(InputImage.fromBitmap(croppedBitmap, 0))
             .addOnFailureListener { exc ->
